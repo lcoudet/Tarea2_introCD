@@ -4,7 +4,7 @@ title: |
 subtitle:  | 
   | \vspace{4cm} \textbf{Análisis de las obras de William Shakespeare}
 author: | 
-  |  \textbf{Grupo 2}
+  |  \textbf{Lucía Coudet - Grupo 2}
 date: | 
   | \vspace{1cm} Montevideo, Junio 2024 
 header-includes:
@@ -82,9 +82,9 @@ kable(tab %>% arrange(desc(conteo)), format = 'latex', caption = 'Párrafos de c
                 bootstrap_options = c("striped", "hover"))
 ```
 
-## Muestra de entrenamiento y muestra de testeo
+## Conjunto de entrenamiento y conjunto de testeo
 
-Para poder llevar a cabo la evaluación y validación de un modelo de aprendizaje estadístico supervisado es necesario partir la muestra que se tiene en un conjunto de entrenamiento sobre el que se entrenan los modelos, y un conjunto de testeo sobre el cuál se mide el error.
+Para poder llevar a cabo la evaluación y validación de un modelo de aprendizaje estadístico supervisado es necesario partir el conjunto de datos que se tiene que se tiene en un conjunto de entrenamiento sobre el que se entrenan los modelos, y un conjunto de testeo sobre el cuál se mide el error.
 
 Esto se hace ya que medir la performance predictiva del modelo utilizando los mismos datos que se usaron para entrenarlo puede llevar a una subestimación del error del mismo en particular en casos de sobreajuste.
 
@@ -104,7 +104,7 @@ y_train <- read_csv(here("data/shakespeare","y_train.csv"), col_names = c('id', 
 y_test <- read_csv(here("data/shakespeare","y_test.csv"), col_names = c('id', 'personaje'))[2:189,]
 ```
 
-En la Tabla 2 se presentan las proporciones de párrafos de cada personaje en el conjunto de entrenamiento y en el conjunto de testeo. Como puede observarse en la misma, los párrafos de cada personaje se encuentran balanceados entre muestra de entrenamiento y muestra de testeo.
+En la Tabla 2 se presentan las proporciones de párrafos de cada personaje en el conjunto de entrenamiento y en el conjunto de testeo. Como puede observarse en la misma, los párrafos de cada personaje se encuentran balanceados entre el conjunto de entrenamiento y el conjunto de testeo.
 
 ```{r}
 tabla_train <- y_train %>% group_by(personaje) %>% summarise(conteo = n()) %>% mutate(proporcion = round(conteo / sum(conteo),3))
@@ -115,7 +115,7 @@ tabla_train <- tabla_train %>% left_join(tabla_test, by = 'personaje') %>% selec
 ```
 
 ```{r, results='asis'}
-kable(tabla_train %>% arrange(desc(`proporcion.x`)), format = 'latex', caption = 'Proporcion de parrafos de cada personaje en la muestra de entrenamiento y de testeo', col.names = c('Personaje', 'Prop. entrenamiento', 'Prop. testeo')) %>%
+kable(tabla_train %>% arrange(desc(`proporcion.x`)), format = 'latex', caption = 'Proporcion de parrafos de cada personaje en el conjunto de entrenamiento y de testeo', col.names = c('Personaje', 'Prop. entrenamiento', 'Prop. testeo')) %>%
   kable_styling(latex_options = 'HOLD_position', font_size = 10, 
                 bootstrap_options = c("striped", "hover"))
 ```
@@ -168,7 +168,7 @@ En este trabajo, se ajustaron los modelo con y sin utilización de  *tf-idf*.
 
 En este apartado se presentan los resultados utilizando las dos primeras PCA sobre los vectores *tf-idf*.
 
-En la Figura 1 se presentan las dos primeras componentes principales sin hacer ningún filtrado adicional sobre la muestra de entrenamiento y estableciendo *ngram_range=(1,1)*. En la Figura 2, se presentan los resultados filtrando las *stopwords* del idioma inglés y *ngram_range=(1,21)*. Por último, en la Figura 3 se presentan los resultados haciendo el filtrado de *stopwords*, *use_idf=True* y *ngram_range=(1,2)*. 
+En la Figura 1 se presentan las dos primeras componentes principales sin hacer ningún filtrado adicional sobre el conjunto de entrenamiento y estableciendo *ngram_range=(1,1)*. En la Figura 2, se presentan los resultados filtrando las *stopwords* del idioma inglés y *ngram_range=(1,21)*. Por último, en la Figura 3 se presentan los resultados haciendo el filtrado de *stopwords*, *use_idf=True* y *ngram_range=(1,2)*. 
 
 \begin{center}
 \includegraphics[width=8cm]{pca1.png}
@@ -184,8 +184,7 @@ En la Figura 1 se presentan las dos primeras componentes principales sin hacer n
 
 Como vemos en las figuras anteriores, antes de filtrar las *stopwords* los puntos se encontraban mezclados unos con otros. Esto se relaciona con lo visto en la tarea 1 que las palabras más frecuentes eran las conectoras y no hay razones para pensar que un personaje contenga más palabras conectoras en sus párrafos que los otros. 
 
-Si se realiza el filtrado de las *stopwords* y además se considera un rango del n-gramma de (1,2) es posible identificar un poco mas claramente nubes de puntos un poco más separadas para cada uno de los personajes. No obstante la nube de puntos mas concentrada puede indicar que se está perdiendo varianza explicada por las PCA.
-
+Si se realiza el filtrado de las *stopwords* y además se considera un rango del n-gramma de (1,2) es posible identificar mas separadas las nubes de puntos. No obstante la nube de puntos mas concentrada puede indicar que se está perdiendo varianza explicada por las PCA.
 
 ### Varianza explicada
 
@@ -208,6 +207,11 @@ kable(var , format = 'latex', caption = 'Varianza explicada PCA') %>%
                 bootstrap_options = c("striped", "hover"))
 ```
 
+Por lo tanto, utilizar solamente las dos primeras componentes principales para separar a los personajes resulta insuficiente, ya que la varianza explicada por las dos primeras componentes principales en todos casos es muy poca.
+
+Por otro lado, si se incrementa la cantidad de componentes principales consideradas se incrementa la varianza explicada. Si se utilizan las 100 primeras componentes principales, la varianza explicada total por la suma de todas es de aproximadamente el 70%. No obstante utilizar tantas componentes no resulta práctico.
+
+Si se miran solamente las 10 primeras componentes principales, la varinza explicada es de del 22.5%. Por su parte, las 5 primeras explican el 14%.
 
 # Entrenamiento y evaluación de modelos
 
@@ -268,8 +272,8 @@ Por otro lado, los algoritmos de aprendizaje estadístico tienen cantidades que 
 ## Ajuste del modelo 
 
 Se ajusto el modelo *Multinomial Naive Bayes* sobre los datos de entrenamiento. Para ello, se considero el filtro de las stopwords en ingles, tf-idf = True y un rango del n-gramma de 1,2.
-.
-En la Tabla 1 se presentan los valores de *accuracy* en muestra de entrenamiento y en muestra de testeo. Como puede apreciarse, el valor del *accuracy* utilizando los datos de testeo es sensiblemente inferior al valor en los datos de entrenamiento. Esto es un indicio de que el modelo podria estar sobreajustado a los datos de entrenamiento.
+
+En la Tabla 1 se presentan los valores de *accuracy* en el conjunto de entrenamiento y en el conjunto de testeo. Como puede apreciarse, el valor del *accuracy* utilizando los datos de testeo es sensiblemente inferior al valor en los datos de entrenamiento. Esto es un indicio de que el modelo podria estar sobreajustado a los datos de entrenamiento.
 
 
 ```{r}
@@ -283,7 +287,13 @@ kable(medidas , format = 'latex', caption = 'Accuracy en datos de entrenamiento 
                 bootstrap_options = c("striped", "hover"))
 ```
 
-Utilizando los datos de testeo, a continuacion se presenta la matriz de confusion. Como se observa en la misma, el modelo es mejor prediciendo en la clase con más frecuencia en los datos. Esto puede deberse al desbalance de cada categoría existente en los mismos.
+Para poder tener una visión más integral de la performance predictiva del modelo, se utiliza una visualización a partir de la matriz de confusión, la cual es una tabla que compara los valores predichos por el modelo con los valores reales y es ampliamente utilizada en problemas de clasificación.
+
+Para el caso de problemas binarios con etiquetas positivo y negativo, la matriz de confusión se compone de verdaderos positivos (TP), falsos positivos (FP), verdaderos negativos (TN) y falsos negativos (FN). A partir de ella se pueden calcular las medidas anteriormente mencionadas: accuracy y recall.
+
+El accuracy se obtiene de la siguiente manera: (TP+TN) / (TP + TN + FP + FN). Por su parte, el recall se obtiene como sigue: TP / (TP + FN).
+
+A continuación se presenta la matriz de confusion construida utilizando el conjunto de testeo. Como se observa en la misma, el modelo es mejor prediciendo en la clase con más frecuencia en los datos. Esto puede deberse al desbalance de cada categoría existente en los mismos.
 
 \begin{center}
 \includegraphics[width=8cm]{confusion_matrix.png}
@@ -315,8 +325,8 @@ Por lo tanto, el modelo con mayor accuracy en el set de validación es el ajusta
 - rango del n-gramma = 1,2
 - idf = True
 
-El valor del accuracy en el set de entrenamiento (incluyendo los datos para la validación) 
-es de 0.96347 mientras que en la muestra de testeo es de: 0.5744. Dado que el accuracy en la muestra de testeo es muy inferior al de la muestra de entrenamiento, el modelo podría estar sobreajustado al data set de entrenamiento.
+El valor del accuracy en el conjunto de entrenamiento (incluyendo los datos para la validación) 
+es de 0.96347 mientras que en el conjunto de testeo es de: 0.5744. Dado que el accuracy en el conjunto de testeo es muy inferior al del conjunto de entrenamiento, el modelo podría estar sobreajustado.
 
 La matriz de confusion es:
 
@@ -366,15 +376,26 @@ Y la matriz de confusión
 
 Como vemos, el modelo predice solamente a la categoría Poet. Esto se debe al gran desbalance en los datos siendo Poet, la categoría con mayor frecuencia en los datos.
 
+# Otras técnicas para extraer características de un texto
+
+La extracción de las características de un texto es un aspecto crucial del procesamiento de lenguaje natural. Existen diversas técnicas para convertir el texto en una representación numérica.
+
+Una alternativa a las utilizadas en el presente trabajo es el **embedding**.
+
+En términos generales, esta técnica permite convertir palabras o frases en vectores de números en un espacio de alta dimensión. Dichos vectores son diseñados de tal manera que capturan las relaciones semánticas y contextuales entre las palabras.
+
+Uno de los tipos más utilizados de *embedding* es el *fasttext*, el cual fue desarrollado por *Facebook* y reliza predicciones tanto de una palabra según el contexto como del contexto según la palabra. Como considera sub-palabras, suele ser bueno con palabras poco frecuentes.
+
+
 # Comentarios finales
 
 El modelo *Multinomial Naive Bayes* ajustado luego de realizar el procedimiento de validación cruzada arroja un valor del accuracy de 0.57744 sobre el conjunto de testeo. No obstante, dentro del conjunto de entrenamiento este valor asciende a 0.96347. Como fue mencionado, esto puede deberse a un sobreajuste en los datos.
 
 Por otro lado, este modelo tiene el supuesto de independencia entre las características, lo cual no suele cumplirse en particular para el caso del análisis de texto, ya que la aparición de ciertas palabras depende de la palabra anterior.
 
-Por otro lado, cuando se analiza el cambio de un personaje, en particular *Antony* por *Poet*, el desbalance en los datos se hace mayor y el modelo no logra hacer ninguna predicción que no sea *Poet*. Si bien esto da un *accuracy* muy elevado, se sugiere en ests casos utilizar otras medidas como el *recall* o el *F1 scrore* para evaluar la bondad de ajuste.
+Cuando se analiza el cambio de un personaje, en particular *Antony* por *Poet*, el desbalance en los datos se hace mayor y el modelo no logra hacer ninguna predicción que no sea *Poet*. Si bien esto da un *accuracy* muy elevado, se sugiere en ests casos utilizar otras medidas como el *recall* o el *F1 scrore* para evaluar la bondad de ajuste.
 
-Para superar estas limitaciones, se sugiere en futuras investigaciones la implementación de modelos más complejos que puedan capturar las dependencias entre las características y que no sean tan sensibles al desbalance en los datos.
+Por último, para superar las limitaciones encontradas en este trabajo, se sugiere para futuras investigaciones la implementación de modelos más complejos que puedan capturar las dependencias entre las características y que no sean tan sensibles al desbalance en los datos. Asimismo, se sugiere utilizar una representación numérica que considere el contexto y no las palabras de manera aislada.
 
 
 
